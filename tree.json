@@ -1,0 +1,54 @@
+{
+  "X5": {
+    "tidak": {
+      "X2": {
+        "ada": "rawat jalan",
+        "tidak": {
+          "X1": {
+            "ada": "rawa jalan",
+            "tidak": {
+              "X4": {
+                "ada": {
+                  "X3": {
+                    "tidak": {
+                      "X6": {
+                        "ada": "rawa jalan"
+                      }
+                    }
+                  }
+                },
+                "tidak": {
+                  "X3": {
+                    "ada": "rawa jalan",
+                    "tidak": {
+                      "X6": {
+                        "ada": "rawat inap bangsal",
+                        "tidak": "rawat jalan"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "ya": {
+      "X4": {
+        "ada": {
+          "X1": {
+            "ada": "rawat inap bangsal",
+            "tidak": { "X2": { "tidak": { "X3": { "tidak": { "X6": { "ada": "rawat jalan" } } } } } }
+          }
+        },
+        "tidak": {
+          "X3": {
+            "ada": "rawat inap icu",
+            "tidak": { "X6": { "ada": { "X1": { "tidak": { "X2": { "tidak": "rawat inap icu" } } } }, "tidak": "rawat inap bangsal" } }
+          }
+        }
+      }
+    }
+  }
+}
