@@ -195,6 +195,9 @@ function CART($data,$keys,$walk=array()){
      $walk[]=$to_split;
      // echo var_dump($walk);
      $split_data=split($data,$to_split,$decisions);
+     echo "<pre>";
+     print_r($split_data);
+     echo "</pre>";
      for($i=0;$i<count($keys);$i++){
           if($keys[$i]==$to_split){
                unset($keys[$i]);
