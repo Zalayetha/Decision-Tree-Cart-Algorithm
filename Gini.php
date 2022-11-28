@@ -189,7 +189,7 @@ function CART($data,$keys,$walk=array()){
      echo "Karena nilai gain nya paling besar maka ".$to_split." akan menjadi Node selanjutnya.<br><br>";
      // decisions digunakan untuk menentukan garis atau alur sebuah node
      $decisions=get_decision_from_root($data,$to_split);
-     echo var_dump($decisions)."<br>";
+     // echo var_dump($decisions)."<br>";
      // echo "oke";
      // walk digunakan untuk menaruh setiap node hingga leaf
      $walk[]=$to_split;

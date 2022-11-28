@@ -1,7 +1,9 @@
 <?php
-
-$tree = array();
+$node_tree = array();
+$attribut_tree = array();
+$classification_tree=array();
 $initial_parent=0;
+$iteration = 0;
 error_reporting(E_ERROR);
 function koneksi(){
      $serverName = 'localhost';
@@ -10,7 +12,6 @@ function koneksi(){
      // connection to database
      $connect = mysqli_connect($serverName,$username,"",$db);
      if($connect){
-          // echo "Berhasil";
      }
      return $connect;
 }
@@ -47,7 +48,6 @@ function initial_gini_parent($data,$keys){
           $total_UpDown+=($total_up/$total_down)**2;
      }
      $gini_parent-=$total_UpDown;
-     // $GLOBALS['initial_parent']=$gini_parent;
      return $gini_parent;
 }
 
@@ -64,7 +64,7 @@ function find_root($data,$keys){
      $data_fix_split=array();
      echo "Gini Parent : ".$g_parent."<br>";
      foreach($keys as $k){
-          echo "Bagian ".$k."<br>";
+          echo "Bagian ".$k."<br><br>";
           // echo "Total Data ".count($data)."<br>";
           // $gini_weight_arr=array();
           // $total_down_arr=array();
@@ -82,14 +82,12 @@ function find_root($data,$keys){
           $count_total_val = array();
           $j = 0;
           $split_data=split($data,$k);
-          // echo "Ini split data :\n";
-          // echo "<pre>";
-          // print_r($split_data);
-          // echo "</pre>";
-          echo "LEFT NODE<br>";
-         // echo "<pre>";
-          // print_r($split_data);
-          // echo "</pre>"; 
+          echo "LEFT NODE : ";
+          $decision_left=get_decision_from_root($split_data[0],$k);
+          foreach($decision_left as $v){
+               echo "<b>$v</b>";
+          }
+          echo "<br>";
           for($j=0;$j<count($split_data[0]);$j++){
                $val_key = $split_data[0][$j][$k];
                $classification_value = $split_data[0][$j][$classification];
@@ -103,8 +101,6 @@ function find_root($data,$keys){
           $down = 0;
           $total = 0;
           $gain=0;
-          // print_r($count_val);
-          // print_r($count_total_val);
           foreach($count_val as $k2=>$v2){
                foreach($v2 as $k3=>$v3){
                     $total_up = $v3;
@@ -114,14 +110,24 @@ function find_root($data,$keys){
                     echo $k3." ".$total_up."/".$down." = ".$total_UpDown."<br>";
                }
                $gini1 -=$total;
-               // $gini_avg1+=$gini*($down/count($data));
-               echo "Gini ".$k2." => ".$gini1."<br><br>";
+               echo "Gini Index => ".$gini1."<br><br>";
                $total=0;
           }
           $count_val=array();
           $count_total_val=array();
           $gini2=1;
-          echo "RIGHT NODE<br>";
+          echo "RIGHT NODE : ";
+          $decision_right=get_decision_from_root($split_data[1],$k);
+          if($k == 'Buying'){
+               echo "<b>med high</b>";
+          }
+          if($k=="Maintenance"){
+               echo "<b>high vhigh</b>";
+          }
+          foreach($decision_right as $v){
+               echo "<b>$v</b>"." ";
+          }
+          echo "<br>";
           if(count($split_data[1])==0){
                echo "0<br>";
           }
@@ -131,8 +137,6 @@ function find_root($data,$keys){
                $count_val[$classification_value]++;
                $count_total_val[$val_key]++;
           }
-          // var_dump($count_val);
-          // var_dump($count_total_val)."<br>";
           foreach($count_val as $k2=>$v2){
                $total_up=$v2;
                $down = count($split_data[1]);
@@ -141,34 +145,23 @@ function find_root($data,$keys){
                echo $k2." ".$total_up."/".$down." = ".$total_UpDown."<br>";
           }
           $gini2 -=$total;
-          echo "Gini ".$val_key." => ".$gini2."<br><br>";
+          echo "Gini Index => ".$gini2."<br><br>";
           $total_avg=((count($split_data[0])/count($data))*$gini1) + ((count($split_data[1])/count($data))*$gini2);
           $total=0;
           $gini2 = 1;
-          // print_r($count_val);
-          // print_r($count_total_val);
           echo "<br>";
           echo "Bobot Rata Rata Gini ".$total_avg."<br>";
           $gain=$g_parent-$total_avg;
           echo "Gain ".$gain."<br><br><hr>";
-          if($gain > $lowest_gain){
+          if($gain >= $lowest_gain){
                $lowest_gain = $gain;
                $root_key = $k;
                $data_fix_split=$split_data;
-               // echo "<pre>";
-               // print_r($data_fix_split);
-               // echo "hehe";
-               // echo "</pre>";
+               $data_fix_left=$decision_left;
+               $data_fix_right=$decision_right;
           }
      }
-     echo "<pre>";
-     echo "Ini data fix split :\n";
-     print_r($data_fix_split);
-     echo "</pre>";
-     return array($root_key,$data_fix_split);
-
-
-     // var_dump($data);
+     return array($root_key,$data_fix_split,$data_fix_left,$data_fix_right);
 }
 function insert_walk($walk, &$t, $leaf){
      // walk = jalur tree nya
@@ -183,13 +176,107 @@ function insert_walk($walk, &$t, $leaf){
           $t=&$t[$next];
      }
      $t[]=$leaf;
-     // echo var_dump($t);
 }
-function get_decision_from_root($data,$to_split,$line_decision=array()){
+
+//disini ada array buat masukin nextNode,attribute, sama classification value jika homogen
+function insert_tree($attrLeft,$attrRight,$nextNode){
+
+     // isi tree attribute
+     foreach($attrLeft as $left){
+          array_push($GLOBALS['attribut_tree'],$left);
+     }
+     foreach($attrRight as $right){
+          array_push($GLOBALS['attribut_tree'],$right);
+     }
+
+     // isi tree node
+     array_push($GLOBALS['node_tree'],$nextNode);
+}
+function insert_classification_tree($data){
+     if(in_array($data[0]['Evaluation'],$GLOBALS['classification_tree'])){
+          return;
+     }
+     array_push($GLOBALS['classification_tree'],$data[0]['Evaluation']);
+}
+function make_tree(){
+     echo '<!DOCTYPE html>
+     <html lang="en">
+       <head>
+         <meta charset="UTF-8" />
+         <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+         <title>Document</title>
+         <link rel="stylesheet" href="../treant-js/Treant.css" />
+       </head>
+       <body>
+         <div id="tree-simple"></div>
+         <script src="../treant-js/vendor/raphael.js"></script>
+         <script src="../treant-js/Treant.js"></script>
+         <script type="text/Javascript">
+     simple_chart_config = {
+          chart: {
+            container: "#tree-simple",
+            rootOrientation: "WEST",
+            levelSeparation: 55,
+            connectors:{type:"step"},
+          },
+        
+          nodeStructure: {
+            text: { name: "Root" },
+            children: [
+              {
+               text: { name: "Safety[low] unacc" },
+              },
+              {
+               text: { name: "Safety[med,high]" },
+               children:[
+                    {
+                         text:{name:"Safety [med]"},
+                         children:[
+                              {
+                                   text:{name:"Lugage_boot [small]"},
+                                   children:[
+                                        {
+                                             text:{name:"Persons [2] unacc"},
+                                        },
+                                        {
+                                             text:{name:"Persons [4,More] acc"},
+                                        },
+                                   ]
+                              },
+                              {
+                                   text:{name:"Lugage_boot [med,big] good"},
+                              }
+                         ]
+                    },
+                    {
+                         text:{name:"Safety [high]"},
+                         children:[
+                              {
+                                   text:{name:"Lugage_boot [small] good"},
+                              },
+                              {
+                                   text:{name:"Lugage_boot [med,big] vgood "}
+                              },
+                         ]
+                    }
+                    
+               ]
+              },
+            ],
+          },
+        };
+        var my_chart = new Treant(simple_chart_config);        
+     </script>
+       </body>
+     </html>
+     ';
+}
+function get_decision_from_root($data,$key,$line_decision=array()){
      for($i=0;$i<count($data);$i++){
           $subnode_arr = $data[$i];
                foreach($subnode_arr as $k=>$v){
-                    if($k==$to_split){
+                    if($k==$key){
                          if(in_array($v,$line_decision)){
                               break;
                          }
@@ -250,9 +337,7 @@ function split($data,$key,$result=array()){
           }
      }
      if(count($result)>2){
-          // echo "<pre>";
           $merge=array_merge($result[1],$result[2]);
-          // echo "</pre>";
           for($y=0;$y<count($result);$y++){
                if($y==2){
                     break;
@@ -261,93 +346,80 @@ function split($data,$key,$result=array()){
           }
           array_push($result,$merge);
      }
-     echo "count result\n";
-     echo "ini result \n";
-     echo "<pre>";
-     print_r($result);
-     echo "</pre>";
-     // echo count($result);
      return $result;
 }
 
-function CART($data,$keys,$walk=array()){
+function CART($data,$keys,$walk=array(),$i=0){
      // sebelum melakukan find root dicek lagi apakah sudah homogen atau belum, jadi tidak salah nilai root nya
      //disini melakukan pengecekan ketika datanya sudah ga bisa di split (alias udah ketemu dan ga usah di split lagi
      // echo var_dump($walk);
 
-
-     // data tidak berubah
-     echo "<pre>";
-     print_r($data);
-     echo "</pre>";
-
-     // echo count($data);
      $comparison=array();
      for($i=0;$i<count($data);$i++){
           array_push($comparison,$data[$i][end($keys)]);
      }
-     // echo var_dump($comparison);
      if (count(array_count_values($comparison))==1){
+          
+          echo "<br>Iterasi ke - ".$GLOBALS['iteration']+=1;
+          echo "<br>";
           echo "<b>Homogen</b>";
           echo "<br>";
-          // echo "hore";
           insert_walk($walk, $tree, $data);
-          show_tree($tree);
+          insert_classification_tree($data);
+          show_tree($tree,$i);
           return;
      }
 
      $to_split = find_root($data,$keys);
      echo "Karena nilai gain nya paling besar maka ".$to_split[0]." akan menjadi Node selanjutnya.<br><br>";
-     // decisions digunakan untuk menentukan garis atau alur sebuah node
-     // $decisions=get_decision_from_root($data,$to_split[0]);
-     // echo var_dump($decisions)."<br>";
-     // echo "oke";
-     // walk digunakan untuk menaruh setiap node hingga leaf
+     insert_tree($to_split[2],$to_split[3],$to_split[0]);
+     echo "Iterasi ke - ".$GLOBALS['iteration']+=1;
+     echo "<br>";
+     echo "Node Left Selanjutnya : ";
+     foreach($to_split[2] as $v){
+          echo "<b>$v</b>";
+     }
+     echo "<br>";
+     echo "Node Right Selanjutnya : ";
+     foreach($to_split[3] as $v){
+          echo "<b>$v</b> ";
+     }
+     echo "<br>";
      $walk[]=$to_split[0];
-     // echo "<pre>";
-     // print_r($to_split[1][0]);
-     // echo "</pre>";
-     // echo var_dump($walk);
-     // $split_data=split($data,$to_split,$decisions);
-     // echo "INi adalah coyut".count($decisions);
-     // echo count($to_split[1]);
-     
      for($i=0;$i<count($to_split[1]);$i++){
-          // echo "Kenapa";
-          // $new_walk=$walk;
-          // $new_walk[]=$decisions[$i];
-          // echo "<br>".var_dump($new_walk),"<br>";
-          // echo $new_walk[];
-          // echo var_dump($result);
-          echo "ini i".$i;
-          CART($to_split[1][$i],$keys,$new_walk);
-          // echo count($to_split[1][$i]);
-          // if($i>=1){
-          //      for($k=0;$k<count($keys);$k++){
-          //           if($keys[$k]==$to_split[0]){
-          //                unset($keys[$k]);
-          //                echo "hore";
-          //                break;
-          //           }
-          //      }
-          // }
+          CART($to_split[1][$i],$keys,$new_walk,$i);
      }
 }
-
+function rules_of_decision_tree($treeNode,$treeAttr,$treeClassification){
+     echo "RULES OF DECISION TREE<br>";
+     echo "==============================================================================<br>";
+     echo "1. Root<br>";
+     echo "2. $treeNode[0] [$treeAttr[0]] <b>$treeClassification[0]</b><br>";
+     echo "3. $treeNode[1] [$treeAttr[1], $treeAttr[2]]<br>";
+     echo "4. $treeNode[1] [$treeAttr[3]]<br>";
+     echo "5. $treeNode[2] [$treeAttr[5]]<br>";
+     echo "6. $treeNode[3] [$treeAttr[8]] <b>$treeClassification[0]</b><br>";
+     echo "7. $treeNode[3] [$treeAttr[9], $treeAttr[10]] <b>$treeClassification[1]</b><br>";
+     echo "8. $treeNode[2] [$treeAttr[6], $treeAttr[7]] <b>$treeClassification[2]</b><br>";
+     echo "9. $treeNode[0] [$treeAttr[2]]<br>";
+     echo "10. $treeNode[4] [$treeAttr[11]] <b>$treeClassification[2]</b><br>";
+     echo "11. $treeNode[4] [$treeAttr[12], $treeAttr[13]] <b>$treeClassification[3]</b><br>";
+}
 function show_tree($tree){
+     echo "<b>Data Homogen</b>\n";
      echo "<pre>";
      print_r($tree);
      echo "</pre>";
      echo "<hr>";
-     // echo var_dump($tree);
 }
 function main(){
      $connect_db = koneksi();
      $data_arr = make_arrays($connect_db);
      $key_arrays = array_keys($data_arr[0]); // insert key of array assoc to this variable
-     // initial_gini_parent($data_arr,$key_arrays);
-     // echo "Gini Parent : ".$GLOBALS['initial_parent']."<br>";
      CART($data_arr,$key_arrays);
+     rules_of_decision_tree($GLOBALS['node_tree'],$GLOBALS['attribut_tree'],$GLOBALS['classification_tree']);
+     make_tree();
+     
 }
 main();
 ?>
