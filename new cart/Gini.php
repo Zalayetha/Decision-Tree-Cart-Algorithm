@@ -76,8 +76,6 @@ function find_root($data,$keys){
           //count val berisi jumlah classification disetiap [record][kolom]  contoh: array(3) { [3]=> array(2) { ["good"]=> int(1) ["vgood"]=> int(1) } [4]=> array(2) { ["unacc"]=> int(2) ["vgood"]=> int(1) } ["more"]=> array(4) { ["unacc"]=> int(4) ["acc"]=> int(2) ["good"]=> int(3) ["vgood"]=> int(2) } }
 
           //count_total_val berisi jumlah total classification di setiap record contoh:array(3) { [3]=> int(2) [4]=> int(3) ["more"]=> int(11) }
-
-          
           $count_val = array();
           $count_total_val = array();
           $j = 0;
@@ -206,19 +204,18 @@ function make_tree(){
          <meta http-equiv="X-UA-Compatible" content="IE=edge" />
          <meta name="viewport" content="width=device-width, initial-scale=1.0" />
          <title>Document</title>
-         <link rel="stylesheet" href="../treant-js/Treant.css" />
+         <link rel="stylesheet" href="treant-js/Treant.css" />
        </head>
        <body>
          <div id="tree-simple"></div>
-         <script src="../treant-js/vendor/raphael.js"></script>
-         <script src="../treant-js/Treant.js"></script>
+         <script src="treant-js/vendor/raphael.js"></script>
+         <script src="treant-js/Treant.js"></script>
          <script type="text/Javascript">
      simple_chart_config = {
           chart: {
             container: "#tree-simple",
             rootOrientation: "WEST",
             levelSeparation: 55,
-            connectors:{type:"step"},
           },
         
           nodeStructure: {
