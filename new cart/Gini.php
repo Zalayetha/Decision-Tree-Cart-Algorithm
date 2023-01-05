@@ -24,7 +24,6 @@ function make_arrays($conn,$query = 'SELECT * FROM data_sample'){
      $result = mysqli_query($conn,$query); // result
 
      if(mysqli_num_rows($result)>0){
-          // echo mysqli_num_rows($result);
           echo "<br>";
           while($row=mysqli_fetch_assoc($result)){
                $rows[] = $row;
@@ -56,7 +55,6 @@ function find_root($data,$keys){
      $data -> records array
      $keys -> key array
      */
-     // echo var_dump($keys);
      $g_parent=initial_gini_parent($data,$keys);
      $classification = array_pop($keys);
      $root_key = '';
@@ -65,9 +63,6 @@ function find_root($data,$keys){
      echo "Gini Parent : ".$g_parent."<br>";
      foreach($keys as $k){
           echo "Bagian ".$k."<br><br>";
-          // echo "Total Data ".count($data)."<br>";
-          // $gini_weight_arr=array();
-          // $total_down_arr=array();
           // count_val = (val_atribut) {(classification value) (jumlahnya)
           //                            (classification value) (jumlahnya)}
           //
@@ -310,7 +305,6 @@ function split($data,$key,$result=array()){
           $data_arr[1]=4;
           $data_arr[2]="More";
      }
-     // var_dump($data_arr);
      if(count($data_arr)<=1){
           $len=count($data_arr)+1;
           for($j=0;$j<$len;$j++){
@@ -349,7 +343,6 @@ function split($data,$key,$result=array()){
 function CART($data,$keys,$walk=array(),$i=0){
      // sebelum melakukan find root dicek lagi apakah sudah homogen atau belum, jadi tidak salah nilai root nya
      //disini melakukan pengecekan ketika datanya sudah ga bisa di split (alias udah ketemu dan ga usah di split lagi
-     // echo var_dump($walk);
 
      $comparison=array();
      for($i=0;$i<count($data);$i++){
